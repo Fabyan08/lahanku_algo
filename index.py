@@ -164,13 +164,14 @@ def list_penyewa(user_id):
             
             pilihan = input("\nPilih nomor untuk melihat detail (0 untuk kembali): ")
             if pilihan == "0":
-                return
+                show_menu("pemilik_lahan", user_id)
             if pilihan in penyewa_dict:
-                detail_penyewa(penyewa_dict[pilihan])
+                detail_penyewa(penyewa_dict[pilihan], user_id)
             else:
                 print("Nomor tidak valid.")
     except FileNotFoundError as e:
         print(f"File tidak ditemukan: {e}")
+
 
 def sewa_lahan(user_id):
     print("\n=== Sewa Lahan ===")
@@ -257,7 +258,21 @@ def tambah_sewa(user_id, lahan, tanggal_sewa, tanggal_berakhir, luas_sewa, total
             "Belum Perjanjian"     # Status
         ])
 
-def buat_surat_perjanjian(data):
+def get_username(user_id):
+    """
+    Fungsi untuk mendapatkan nama pengguna dari users.csv berdasarkan user_id.
+    """
+    with open('users.csv', 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if row[0] == str(user_id):  # Membandingkan ID pengguna sebagai string
+                return row[1]  # Mengembalikan nama pengguna
+    return "Unknown"  # Jika tidak ditemukan
+
+def buat_surat_perjanjian(data, user_id):
+    """
+    Fungsi untuk membuat surat perjanjian.
+    """
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", size=12)
@@ -290,10 +305,15 @@ def buat_surat_perjanjian(data):
     pdf.cell(200, 10, txt="Pihak 1: ___________________", ln=True)
     pdf.cell(200, 10, txt="Pihak 2: ___________________", ln=True)
 
+    # Mendapatkan nama pengguna dari user_id
+    nama_penyewa = get_username(user_id).replace(" ", "_")  # Nama pengguna (ganti spasi dengan underscore)
+
     # Menyimpan file PDF dengan nama yang unik
-    file_name = f"perjanjian_{data[1]}_{data[0]}.pdf"
+    id_sewa = data[1]  # ID sewa
+    file_name = f"{id_sewa}_{nama_penyewa}.pdf"  # Format nama file
     pdf.output(file_name)
     print(f"Surat perjanjian disimpan sebagai {file_name}.")
+
 
 def data_perjanjian(user_id):
     print("\n=== Data Perjanjian ===")
@@ -319,7 +339,7 @@ def data_perjanjian(user_id):
     pilihan = input("\nMasukkan nomor perjanjian untuk dibuat (atau 0 untuk batal): ")
     if pilihan.isdigit() and 1 <= int(pilihan) <= len(data_sewa):
         nomor = int(pilihan) - 1
-        buat_surat_perjanjian(data_sewa[nomor])
+        buat_surat_perjanjian(data_sewa[nomor], user_id)
         print("Surat perjanjian berhasil dibuat dan disimpan sebagai PDF.")
     else:
         print("Pilihan tidak valid.")
@@ -490,9 +510,7 @@ def lihat_lahan(user_id):
         print("Pilihan tidak valid.")
         lihat_lahan(user_id)
 
-
-
-def detail_penyewa(data):
+def detail_penyewa(data, user_id):
     sewa, lahan, penyewa = data
     print("\n=== Detail Penyewa ===")
     print(f"Nama Penyewa: {penyewa[1]}")
@@ -514,6 +532,9 @@ def detail_penyewa(data):
             print("Data sewa berhasil dihapus.")
         else:
             print("Data sewa tidak dihapus.")
+    elif sewa[6].lower() == "selesai":
+        # Jika status sudah "Selesai", kembali ke menu List Penyewa
+        input("\nStatus sudah 'Selesai'. Tekan Enter untuk kembali ke List Penyewa.")
     else:
         # Jika status belum "Belum Berjalan", tanyakan apakah ingin menyetujui perjanjian
         konfirmasi = input("\nApakah Anda ingin menyetujui perjanjian ini? (y/n): ").lower()
@@ -522,6 +543,9 @@ def detail_penyewa(data):
             print("Perjanjian berhasil disetujui. Status diperbarui menjadi 'Belum Berjalan'.")
         else:
             print("Perjanjian tidak disetujui.")
+
+    # Setelah selesai melihat detail, kembali ke List Penyewa
+    list_penyewa(user_id)
 
 # Contoh fungsi untuk menghapus data (dummy function)
 def hapus_data_sewa(sewa):
