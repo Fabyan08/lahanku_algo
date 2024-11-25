@@ -2,6 +2,7 @@ import csv
 import hashlib
 from datetime import datetime, timedelta
 from fpdf import FPDF
+import re  # Untuk validasi email
 
 # Fungsi untuk mendapatkan ID berikutnya
 def get_next_id(filename):
@@ -67,10 +68,20 @@ def register():
     main_menu()
 
 # Fungsi login
+def is_valid_email(email):
+    # Regex sederhana untuk validasi email
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email)
+
 def login():
     print("=== Login ===")
-    email = input("Masukkan Email: ")
-    password = input("Masukkan Password: ")
+    email = input("Masukkan Email: ").strip()
+    password = input("Masukkan Password: ").strip()
+
+    # Validasi format email
+    if not is_valid_email(email):
+        print("Format email tidak valid. Silakan coba lagi.")
+        login()
+        return
 
     # Enkripsi password untuk verifikasi
     password_hash = hashlib.sha256(password.encode()).hexdigest()
@@ -78,15 +89,21 @@ def login():
     try:
         with open("users.csv", mode="r") as file:
             reader = csv.reader(file)
+            next(reader, None)  # Lewati header, jika ada
             for row in reader:
+                if len(row) < 8:  # Pastikan row memiliki cukup kolom
+                    continue
                 # Memeriksa kecocokan email dan password
                 if row[2] == email and row[3] == password_hash:
                     print(f"Login berhasil! Selamat datang, {row[1]}")
                     show_menu(row[7], row[0])  # Tampilkan menu sesuai level, level berada pada kolom ke-7
                     return
+
     except FileNotFoundError:
         print("Database pengguna belum tersedia. Silakan registrasi terlebih dahulu.")
-    
+    except Exception as e:
+        print(f"Terjadi kesalahan: {e}")
+
     print("Email atau password salah. Coba lagi.")
     main_menu()
 
@@ -94,7 +111,6 @@ def login():
 def show_menu(level, user_id):
     print("\n=== Menu Utama ===")
     print("[0] Profil")
-
     if level == "pengguna":
         print("[1] Sewa Lahan")
         print("[2] Data Perjanjian")
@@ -133,10 +149,10 @@ def show_menu(level, user_id):
         while True:
             pilihan = input("Pilih menu: ")
             if pilihan == '1':
-                rekap_penyewaan()
+                rekap_penyewaan(user_id)  # Pastikan user_id diteruskan
                 break
             elif pilihan == '2':
-                rekap_jumlah_pengguna()
+                rekap_jumlah_pengguna(user_id)
                 break
             elif pilihan == '0':
                 show_profile(level, user_id)  # Tampilkan menu Profil
@@ -146,6 +162,7 @@ def show_menu(level, user_id):
     else:
         print("Level akses tidak dikenali.")
         return
+    
 
 
 # SEMUA HAK AKSES
@@ -173,6 +190,8 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         print(f"Alamat: {user[6]}")
         print("=" * 30)
 
+        
+
         # Memberikan opsi untuk mengubah profil
         print("Pilih data yang ingin diubah:")
         print("[1] Nama")
@@ -181,6 +200,9 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         print("[4] Nomor HP")
         print("[5] Alamat")
         print("[0] Kembali ke Menu Utama")
+        print(" ")
+        print("=====Logout=====")
+        print("[9] Logout")
 
         pilihan = input("Pilih menu: ")
 
@@ -207,6 +229,9 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         elif pilihan == '0':
             show_menu(level, user_id)  # Kembali ke menu utama
             return
+        elif pilihan == '9':
+            print("Terima kasih telah menggunakan layanan kami. Sampai jumpa kembali!")
+            return
         else:
             print("Pilihan tidak valid. Kembali ke menu utama.")
             show_menu(level, user_id)  # Kembali ke menu utama
@@ -215,15 +240,13 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         with open('users.csv', 'w', newline='') as file:
             writer = csv.writer(file)
             writer.writerows(users)
+            show_menu(level, user_id)  # Kembali ke menu utama
+            return
 
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
 
-
-
 # PENGGUNA
-
-
 
 def sewa_lahan(user_id):
     print("\n=== Sewa Lahan ===")
@@ -385,7 +408,6 @@ def buat_surat_perjanjian(data, user_id):
     pdf.output(file_name)
     print(f"Surat perjanjian disimpan sebagai {file_name}.")
 
-
 def data_perjanjian(user_id):
     print("\n=== Data Perjanjian ===")
     print(f"{'No':<5} {'Lokasi':<30} {'Tanggal Sewa':<15} {'Tanggal Berakhir':<15} {'Status':<20} {'ID Penyewa':<12} {'ID Lahan':<10}")
@@ -468,6 +490,7 @@ def lihat_history(user_id):
         # Memilih data untuk melihat detail
         pilihan = input("\nMasukkan nomor untuk melihat detail (atau 0 untuk kembali): ")
         if pilihan == '0':
+            show_menu("pengguna", user_id)
             return
         if not pilihan.isdigit() or not (1 <= int(pilihan) <= len(data_sewa)):
             print("Nomor tidak valid.")
@@ -737,7 +760,7 @@ def hapus_lahan(user_id, lahan_data):
     lihat_lahan(user_id)
 
 # ADMIN =================
-def rekap_penyewaan():
+def rekap_penyewaan(user_id):
     try:
         # Membaca file CSV
         with open("sewa.csv", "r") as sewa_file, open("users.csv", "r") as user_file, open("lahan.csv", "r") as lahan_file:
@@ -759,6 +782,8 @@ def rekap_penyewaan():
             sewa_list = [row for row in sewa_reader if len(row) >= 8]  # Pastikan ada minimal 8 kolom sesuai format baru
             if not sewa_list:
                 print("Tidak ada data penyewaan.")
+                input("\nTekan Enter untuk kembali.")
+                show_menu("admin", user_id)
                 return
 
             for i, sewa in enumerate(sewa_list):
@@ -778,8 +803,8 @@ def rekap_penyewaan():
             while True:
                 pilihan = input("\nMasukkan nomor untuk melihat detail (atau 0 untuk kembali): ")
                 if pilihan == "0":
-                    # Kembali ke menu utama
-                    return  # Keluar dari fungsi rekap_penyewaan dan kembali ke menu utama
+                    show_menu("admin", user_id)
+                    return
                 if not pilihan.isdigit() or int(pilihan) < 1 or int(pilihan) > len(sewa_list):
                     print("Pilihan tidak valid. Silakan coba lagi.")
                     continue
@@ -791,6 +816,9 @@ def rekap_penyewaan():
 
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
+        input("\nTekan Enter untuk kembali.")
+        show_menu("admin", user_id)
+
 
 def tampilkan_detail(sewa, user_map, lahan_map):
     try:
@@ -830,8 +858,7 @@ def tampilkan_detail(sewa, user_map, lahan_map):
     except Exception as e:
         print(f"Terjadi kesalahan saat menampilkan detail: {e}")
 
-
-def rekap_jumlah_pengguna():
+def rekap_jumlah_pengguna(user_id):
     try:
         # Membaca file CSV
         with open("users.csv", "r") as user_file, open("sewa.csv", "r") as sewa_file:
@@ -861,6 +888,8 @@ def rekap_jumlah_pengguna():
                 status = "Menyewa" if id_user in pengguna_menyewa else "Belum Menyewa"
                 print(f"{i+1:<5} {id_user:<15} {nama_user:<20} {status:<20}")
 
+            input("\nTekan Enter untuk kembali.")
+            show_menu("admin", user_id)
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
 
