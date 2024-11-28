@@ -5,7 +5,7 @@ from fpdf import FPDF
 import re  # Untuk validasi email
 
 # Fungsi untuk mendapatkan ID berikutnya
-def get_next_id(filename):
+def id_berikutnya(filename):
     try:
         with open(filename, mode="r") as file:
             reader = csv.reader(file)
@@ -34,7 +34,7 @@ def main_menu():
 # Fungsi registrasi
 def register():
     print("=== Registrasi ===")
-    user_id = get_next_id("users.csv")  # Ambil ID berikutnya
+    user_id = id_berikutnya("users.csv")  # Ambil ID berikutnya
     nama = input("Masukkan Nama: ")
     email = input("Masukkan Email: ")
     password = input("Masukkan Password: ")
@@ -411,7 +411,6 @@ def tambah_sewa(user_id, lahan, tanggal_sewa, tanggal_berakhir, luas_sewa, total
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
         
-# CHECKING =======
 
 def get_username(user_id):
     # Fungsi sederhana untuk mendapatkan nama pengguna dari file users.csv
@@ -464,7 +463,6 @@ def buat_surat_perjanjian(data, user_id):
     file_name = f"{id_sewa}_{nama_penyewa}.pdf"  # Format nama file
     pdf.output(file_name)
     print(f"Surat perjanjian disimpan sebagai {file_name}.")
-
 
 
 def data_perjanjian(user_id):
@@ -528,14 +526,13 @@ def data_perjanjian(user_id):
     input("\nTekan Enter untuk kembali.")
     show_menu("pengguna", user_id)
     
-    
-# ====== CHECKING =====
 
 def lihat_history(user_id):
     try:
         # Membaca data sewa untuk mencocokkan user_id
         with open("sewa.csv", mode="r") as file:
             reader = csv.reader(file)
+            # len row 7 memastikan hanya data yang lengkap yg diproses
             data_sewa = [row for row in reader if len(row) > 7 and row[1] == str(user_id)]  # Kolom ke-2 adalah user_id
 
         if not data_sewa:
@@ -644,7 +641,7 @@ def crud_lahan(user_id):
 
 def tambah_lahan(user_id):
     print("\n=== Tambah Lahan ===")
-    lahan_id = get_next_id("lahan.csv")  # ID lahan otomatis
+    lahan_id = id_berikutnya("lahan.csv")  # ID lahan otomatis
     lokasi = input("Masukkan lokasi lahan: ")
     tanaman = input("Masukkan jenis tanaman (pisahkan dengan koma, contoh: padi,jagung): ")
     deskripsi = input("Masukkan deskripsi lahan: ")
@@ -780,7 +777,6 @@ def detail_penyewa(data, user_id):
     # Setelah selesai melihat detail, kembali ke List Penyewa
     list_penyewa(user_id)
 
-# Contoh fungsi untuk menghapus data (dummy function)
 def hapus_data_sewa(sewa):
     print(f"Data sewa dengan ID {sewa[0]} telah dihapus.")
 
@@ -881,7 +877,6 @@ def rekap_penyewaan(user_id):
         print(f"Terjadi kesalahan: {e}")
         input("\nTekan Enter untuk kembali.")
         show_menu("admin", user_id)
-
 
 def tampilkan_detail(sewa, user_map, lahan_map):
     try:
