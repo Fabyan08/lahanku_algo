@@ -89,9 +89,8 @@ def login():
     try:
         with open("users.csv", mode="r") as file:
             reader = csv.reader(file)
-            next(reader, None)  # Lewati header, jika ada
             for row in reader:
-                if len(row) < 8:  # Pastikan row memiliki cukup kolom
+                if len(row) < 8: 
                     continue
                 # Memeriksa kecocokan email dan password
                 if row[2] == email and row[3] == password_hash:
@@ -106,6 +105,8 @@ def login():
 
     print("Email atau password salah. Coba lagi.")
     main_menu()
+
+
 
 # Menu sesuai level
 def show_menu(level, user_id):
@@ -125,7 +126,7 @@ def show_menu(level, user_id):
         elif pilihan == '3':
             lihat_history(user_id)
         else:
-            print("Fitur sedang dalam pengembangan.")
+            print("Pilihan tidak valid. Silahkan coba lagi")
             show_menu(level, user_id)
 
     elif level == "pemilik_lahan":
@@ -139,7 +140,7 @@ def show_menu(level, user_id):
         elif pilihan == '2':
             list_penyewa(user_id)  # Panggil fungsi baru untuk fitur List Penyewa
         else:
-            print("Fitur sedang dalam pengembangan.")
+            print("Pilihan tidak valid. Silahkan coba lagi")
             show_menu(level, user_id)
 
     elif level == "admin":
@@ -240,7 +241,7 @@ def show_profile(level, user_id):  # Add the 'level' argument here
             writer = csv.writer(file)
             writer.writerows(users)
             show_menu(level, user_id)  # Kembali ke menu utama
-            return
+            # return
 
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
@@ -311,7 +312,6 @@ def detail_lahan(user_id, lahan):
 
         if konfirmasi == 'y':
             tambah_sewa(user_id, lahan, tanggal_sewa, tanggal_berakhir.strftime('%Y-%m-%d'), luas_sewa, total_harga)
-            print("Sewa berhasil ditambahkan. Menunggu perjanjian.")
         else:
             print("Sewa dibatalkan.")
     except ValueError:
@@ -372,13 +372,9 @@ def tambah_sewa(user_id, lahan, tanggal_sewa, tanggal_berakhir, luas_sewa, total
                 break
         
         for row in users_data:
-            if len(row) > 5 and row[0] == id_pemilik and row[7] == "pemilik_lahan":  # Cocokkan ID pemilik dan role
+            if row[0] == id_pemilik and row[7] == "pemilik_lahan":  # Cocokkan ID pemilik dan role
                 nomor_telepon_pemilik = row[5]  # Ambil nomor telepon
                 break
-
-        if not nomor_telepon_pemilik:
-            print("Pemilik lahan tidak ditemukan. Pastikan data 'users.csv' benar.")
-            return
 
         # Membaca file sewa.csv untuk mendapatkan ID terakhir
         with open("sewa.csv", mode="r") as file:
@@ -408,9 +404,11 @@ def tambah_sewa(user_id, lahan, tanggal_sewa, tanggal_berakhir, luas_sewa, total
             ])
         print(f"Data penyewaan dengan ID {new_id} berhasil ditambahkan.")
         print(f"Untuk perjanjian, dapat menghubungi nomor telepon pemilik lahan: {nomor_telepon_pemilik}")
+        print("Sewa berhasil ditambahkan. Menunggu perjanjian.")
+
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
-        
+
 
 def get_username(user_id):
     # Fungsi sederhana untuk mendapatkan nama pengguna dari file users.csv
