@@ -419,53 +419,10 @@ def get_username(user_id):
                 return row[1]  # Nama pengguna
     return "Unknown"
 
-def buat_surat_perjanjian(data, user_id):
-    # Fungsi untuk membuat surat perjanjian.
-    
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-
-    # Judul surat perjanjian
-    pdf.cell(200, 10, txt="Surat Perjanjian Sewa Lahan", ln=True, align='C')
-    pdf.ln(10)
-
-    # Menambahkan detail perjanjian
-    tanggal_sewa = data[3]
-    tanggal_berakhir = data[4]
-    luas_sewa = float(data[5])
-    total_harga = float(data[6])
-
-    pdf.cell(200, 10, txt=f"Tanggal Sewa: {tanggal_sewa}", ln=True)
-    pdf.cell(200, 10, txt=f"Tanggal Berakhir: {tanggal_berakhir}", ln=True)
-    pdf.cell(200, 10, txt=f"Luas Lahan: {luas_sewa} hektar", ln=True)
-    pdf.cell(200, 10, txt=f"Total Harga: Rp {total_harga:,.2f}".replace(",", "."), ln=True)  # Format harga
-
-    pdf.cell(200, 10, txt=f"Status: {data[7]}", ln=True)
-
-    pdf.ln(10)
-    pdf.cell(200, 10, txt="Dengan ini kedua belah pihak sepakat untuk melaksanakan perjanjian ini.", ln=True)
-    pdf.cell(200, 10, txt="Pihak 1: Pemilik Lahan", ln=True)
-    pdf.cell(200, 10, txt="Pihak 2: Penyewa", ln=True)
-
-    pdf.ln(10)
-    pdf.cell(200, 10, txt="Tanda Tangan:", ln=True)
-    pdf.cell(200, 10, txt="Pihak 1: ___________________", ln=True)
-    pdf.cell(200, 10, txt="Pihak 2: ___________________", ln=True)
-
-    # Mendapatkan nama pengguna dari user_id
-    nama_penyewa = get_username(user_id).replace(" ", "_")  # Nama pengguna (ganti spasi dengan underscore)
-
-    # Menyimpan file PDF dengan nama yang unik
-    id_sewa = data[0]  # ID sewa
-    file_name = f"{id_sewa}_{nama_penyewa}.pdf"  # Format nama file
-    pdf.output(file_name)
-    print(f"Surat perjanjian disimpan sebagai {file_name}.")
-
 
 def data_perjanjian(user_id):
     print("\n=== Data Perjanjian ===")
-    print(f"{'No':<5} {'Lokasi':<30} {'Tanggal Sewa':<15} {'Tanggal Berakhir':<15} {'Status':<20} {'ID Penyewa':<12} {'ID Lahan':<10}")
+    print(f"{'No':<5} {'Lokasi':<30} {'Tanggal Sewa':<15} {'Tanggal Berakhir':<15} {'Status':<20}  {'ID Lahan':<10}")
     print("="*100)
 
     data_sewa = []
@@ -507,11 +464,10 @@ def data_perjanjian(user_id):
         tanggal_sewa = row[3]  # Tanggal Sewa ada di kolom ke-4
         tanggal_berakhir = row[4]  # Tanggal Berakhir ada di kolom ke-5
         status = row[7]  # Status ada di kolom ke-8
-        id_penyewa = row[4]  # ID penyewa ada di kolom ke-5
         id_lahan = row[2]  # ID lahan ada di kolom ke-3
 
         # Menampilkan data perjanjian
-        print(f"{i:<5} {lokasi_name:<30} {tanggal_sewa:<15} {tanggal_berakhir:<15} {status:<20} {id_penyewa:<12} {id_lahan:<10}")
+        print(f"{i:<5} {lokasi_name:<30} {tanggal_sewa:<15} {tanggal_berakhir:<15} {status:<20} {id_lahan:<10}")
 
     pilihan = input("\nMasukkan nomor perjanjian untuk dibuat (atau 0 untuk batal): ")
     if pilihan.isdigit() and 1 <= int(pilihan) <= len(data_sewa):
@@ -523,6 +479,51 @@ def data_perjanjian(user_id):
     
     input("\nTekan Enter untuk kembali.")
     show_menu("pengguna", user_id)
+
+def buat_surat_perjanjian(data, user_id):
+    # Fungsi untuk membuat surat perjanjian.
+
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    # Judul surat perjanjian
+    pdf.cell(200, 10, txt="Surat Perjanjian Sewa Lahan", ln=True, align='C')
+    pdf.ln(10)
+
+    # Menambahkan detail perjanjian
+    tanggal_sewa = data[3]
+    tanggal_berakhir = data[4]
+    luas_sewa = float(data[5])
+    total_harga = float(data[6])
+    
+    total_harga_format = f"Rp {total_harga:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
+    
+    pdf.cell(200, 10, txt=f"Tanggal Sewa: {tanggal_sewa}", ln=True)
+    pdf.cell(200, 10, txt=f"Tanggal Berakhir: {tanggal_berakhir}", ln=True)
+    pdf.cell(200, 10, txt=f"Luas Lahan: {luas_sewa} hektar", ln=True)
+    pdf.cell(200, 10, txt=f"Total Harga: {total_harga_format}", ln=True)  # Gunakan total_harga_format yang sudah diformat
+    pdf.cell(200, 10, txt=f"Status: {data[7]}", ln=True)
+
+    pdf.ln(10)
+    pdf.cell(200, 10, txt="Dengan ini kedua belah pihak sepakat untuk melaksanakan perjanjian ini.", ln=True)
+    pdf.cell(200, 10, txt="Pihak 1: Pemilik Lahan", ln=True)
+    pdf.cell(200, 10, txt="Pihak 2: Penyewa", ln=True)
+
+    pdf.ln(10)
+    pdf.cell(200, 10, txt="Tanda Tangan:", ln=True)
+    pdf.cell(200, 10, txt="Pihak 1: ___________________", ln=True)
+    pdf.cell(200, 10, txt="Pihak 2: ___________________", ln=True)
+
+    # Mendapatkan nama pengguna dari user_id
+    nama_penyewa = get_username(user_id).replace(" ", "_")  # Nama pengguna (ganti spasi dengan underscore)
+
+    # Menyimpan file PDF dengan nama yang unik
+    id_sewa = data[0]  # ID sewa
+    file_name = f"{id_sewa}_{nama_penyewa}.pdf"  # Format nama file
+    pdf.output(file_name)
+    print(f"Surat perjanjian disimpan sebagai {file_name}.")
+
     
 
 def lihat_history(user_id):
@@ -550,6 +551,7 @@ def lihat_history(user_id):
         if pilihan == '0':
             show_menu("pengguna", user_id)
             return
+        
         if not pilihan.isdigit() or not (1 <= int(pilihan) <= len(data_sewa)):
             print("Nomor tidak valid.")
             input("\nTekan Enter untuk kembali.")
@@ -567,7 +569,7 @@ def lihat_history(user_id):
         print(f"Total Harga: Rp {float(detail[6]):,.2f}")
 
         # Mengecek jika status masih "Belum Perjanjian"
-        if detail[6] == "Belum Perjanjian":
+        if detail[7] == "Belum Perjanjian":
             print("\nStatus masih 'Belum Perjanjian'. Tidak bisa mengubah status menjadi 'Berjalan' atau 'Selesai'.")
             input("\nTekan Enter untuk kembali.")
             show_menu("pengguna", user_id)
@@ -641,7 +643,7 @@ def tambah_lahan(user_id):
     print("\n=== Tambah Lahan ===")
     lahan_id = id_berikutnya("lahan.csv")  # ID lahan otomatis
     lokasi = input("Masukkan lokasi lahan: ")
-    tanaman = input("Masukkan jenis tanaman (pisahkan dengan koma, contoh: padi,jagung): ")
+    tanaman = input("Masukkan jenis tanaman (pisahkan dengan koma, contoh: padi,jagung): ").lower()
     deskripsi = input("Masukkan deskripsi lahan: ")
     luas = input("Masukkan luas tanah (dalam hektar): ")
     harga_per_hektar = input("Masukkan harga per hektar: ")
@@ -658,7 +660,7 @@ def lihat_lahan(user_id):
     print("\n=== Daftar Lahan ===")
     print(f"{'ID':<5} {'Lokasi':<15} {'Tanaman':<20} {'Luas':<10} {'Harga':<10}")
     print("="*60)
-    lahan_ada = False  # Penanda jika ada data
+    lahan_ada = False   # Penanda jika ada data
     
     try:
         with open("lahan.csv", mode="r") as file:
@@ -687,6 +689,29 @@ def lihat_lahan(user_id):
     else:
         print("Pilihan tidak valid.")
         lihat_lahan(user_id)
+
+# Fungsi untuk menghapus lahan berdasarkan ID
+def hapus_lahan(user_id, lahan_data):
+    print("\n=== Hapus Lahan ===")
+    id_lahan = input("Masukkan ID Lahan yang ingin dihapus: ")
+    lahan_dihapus = False
+
+    # Filter data untuk menghapus lahan sesuai ID dan pemilik
+    with open("lahan.csv", mode="w", newline='') as file:
+        writer = csv.writer(file)
+        for row in lahan_data:
+            if row[0] == id_lahan and row[1] == user_id:
+                lahan_dihapus = True
+            else:
+                writer.writerow(row)
+    
+    if lahan_dihapus:
+        print(f"Lahan dengan ID {id_lahan} berhasil dihapus.")
+    else:
+        print(f"Lahan dengan ID {id_lahan} tidak ditemukan atau bukan milik Anda.")
+    
+    input("\nTekan Enter untuk kembali.")
+    lihat_lahan(user_id)
 
 def list_penyewa(user_id):
     print("\n=== List Penyewa ===")
@@ -793,28 +818,6 @@ def update_status_sewa(sewa):
         writer = csv.writer(file)
         writer.writerows(rows)
 
-# Fungsi untuk menghapus lahan berdasarkan ID
-def hapus_lahan(user_id, lahan_data):
-    print("\n=== Hapus Lahan ===")
-    id_lahan = input("Masukkan ID Lahan yang ingin dihapus: ")
-    lahan_dihapus = False
-
-    # Filter data untuk menghapus lahan sesuai ID dan pemilik
-    with open("lahan.csv", mode="w", newline='') as file:
-        writer = csv.writer(file)
-        for row in lahan_data:
-            if row[0] == id_lahan and row[1] == user_id:
-                lahan_dihapus = True
-            else:
-                writer.writerow(row)
-    
-    if lahan_dihapus:
-        print(f"Lahan dengan ID {id_lahan} berhasil dihapus.")
-    else:
-        print(f"Lahan dengan ID {id_lahan} tidak ditemukan atau bukan milik Anda.")
-    
-    input("\nTekan Enter untuk kembali.")
-    lihat_lahan(user_id)
 
 # ADMIN =================
 def rekap_penyewaan(user_id):
