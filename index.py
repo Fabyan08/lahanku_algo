@@ -174,11 +174,13 @@ def show_profile(level, user_id):  # Add the 'level' argument here
             users = list(csv.reader(file))
 
         # Mencari pengguna berdasarkan user_id
-        user = next((u for u in users if u[0] == user_id), None)
+        user_index = next((i for i, u in enumerate(users) if u[0] == user_id), None)
 
-        if not user:
+        if user_index is None:
             print("Pengguna tidak ditemukan.")
             return
+
+        user = users[user_index]  # Ambil data pengguna berdasarkan indeks
 
         # Menampilkan data profil pengguna
         print("\n=== Profil Pengguna ===")
@@ -189,8 +191,6 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         print(f"Nomor HP: {user[5]}")
         print(f"Alamat: {user[6]}")
         print("=" * 30)
-
-        
 
         # Memberikan opsi untuk mengubah profil
         print("Pilih data yang ingin diubah:")
@@ -208,23 +208,23 @@ def show_profile(level, user_id):  # Add the 'level' argument here
 
         if pilihan == '1':
             new_name = input("Masukkan nama baru: ")
-            user[1] = new_name
+            users[user_index][1] = new_name
             print(f"Nama berhasil diubah menjadi {new_name}")
         elif pilihan == '2':
             new_email = input("Masukkan email baru: ")
-            user[2] = new_email
+            users[user_index][2] = new_email
             print(f"Email berhasil diubah menjadi {new_email}")
         elif pilihan == '3':
             new_ktp = input("Masukkan nomor KTP baru: ")
-            user[4] = new_ktp
+            users[user_index][4] = new_ktp
             print(f"Nomor KTP berhasil diubah menjadi {new_ktp}")
         elif pilihan == '4':
             new_phone = input("Masukkan nomor HP baru: ")
-            user[5] = new_phone
+            users[user_index][5] = new_phone
             print(f"Nomor HP berhasil diubah menjadi {new_phone}")
         elif pilihan == '5':
             new_address = input("Masukkan alamat baru: ")
-            user[6] = new_address
+            users[user_index][6] = new_address
             print(f"Alamat berhasil diubah menjadi {new_address}")
         elif pilihan == '0':
             show_menu(level, user_id)  # Kembali ke menu utama
@@ -235,13 +235,14 @@ def show_profile(level, user_id):  # Add the 'level' argument here
         else:
             print("Pilihan tidak valid. Kembali ke menu utama.")
             show_menu(level, user_id)  # Kembali ke menu utama
+            return
 
         # Menyimpan perubahan ke file CSV
         with open('users.csv', 'w', newline='') as file:
             writer = csv.writer(file)
-            writer.writerows(users)
-            show_menu(level, user_id)  # Kembali ke menu utama
-            # return
+            writer.writerows(users)  # Tulis ulang semua data dengan update
+
+        show_menu(level, user_id)  # Kembali ke menu utama
 
     except Exception as e:
         print(f"Terjadi kesalahan: {e}")
